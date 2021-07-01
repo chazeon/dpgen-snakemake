@@ -1,0 +1,44 @@
+
+system:
+  elements: ["Al", "O", "H"]
+  potcars:
+    Al: /work2/05774/tg850736/stampede2/20210519-VASP/vasp6.2.0/potpaw_PBE/Al/POTCAR
+    O:  /work2/05774/tg850736/stampede2/20210519-VASP/vasp6.2.0/potpaw_PBE/O/POTCAR
+    H:  /work2/05774/tg850736/stampede2/20210519-VASP/vasp6.2.0/potpaw_PBE/H/POTCAR
+eos:
+  init_structure: "POSCAR"
+  volumes:
+    - 36.0
+    # - 37.0
+    - 38.0
+    # - 39.0
+    - 40.0
+    # - 41.0
+    - 42.0
+    # - 43.0
+    - 44.0
+    # - 45.0
+    - 46.0
+    # - 47.0
+    - 48.0
+    # - 49.0
+    - 50.0
+    - 51.0
+    - 52.0
+    - 53.0
+    - 54.0
+    - 55.0
+    - 56.0 # volumes in angstrom
+  job_sh: "templates/relax/job.sh"
+  template: "templates/relax"
+dp_init:
+  templates: "templates/dp_init"
+  supercell: [2, 2, 4]
+  perturb:
+    number: 10
+    box: 0.03
+    atom: 0.01
+dp_run:
+  iterations: []
+  train:
+  

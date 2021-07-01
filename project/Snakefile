@@ -1,0 +1,2 @@
+include: "workflow/dp_init/Snakefile"
+include: "workflow/dp_run/Snakefile"

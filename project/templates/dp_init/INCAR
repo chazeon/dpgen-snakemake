@@ -1,0 +1,35 @@
+System = Delta AlOOH
+
+prec = Accurate
+
+#ecutwfc in QE, unit is eV. 1000 eV ~ 80Ry
+#ENCUT	= largest ENMAX on the POTCAR file
+ENCUT = 520.0
+
+NCORE = 2 up to number-of-cores-per-node
+
+METAGGA  = SCAN
+# LUSE_VDW = .TRUE.
+# BPARAM = 15.7
+# LASPH = .TRUE.
+
+#Relaxation, conjugate gradient algo
+IBRION = 0
+POTIM = 3
+NSW = 15
+ISIF = 2
+MDALGO = 2
+TEBEG = 500
+
+EDIFF = 1.0e-04
+# EDIFFG = -1.0e-3
+
+ISMEAR = 0
+SIGMA = 0.01
+
+# unit in kbar
+# PSTRESS = -60 
+
+LREAL = Auto
+
+ISYM = 0
