@@ -1,4 +1,3 @@
-
 import click
 import dpdata
 
@@ -10,13 +9,14 @@ import dpdata
 def main(files, type_map, outdir):
 
     type_map = type_map.split(",")
-    msys = dpdata.MultiSystems()
+    labeled_system = dpdata.LabeledSystem()
+
     for ofile in files:
         s = dpdata.LabeledSystem(ofile, type_map=type_map)
-        msys.append(s)
-    
-    msys.to_deepmd_raw(outdir)
-    msys.to_deepmd_npy(outdir)
+        labeled_system.append(s)
+
+    labeled_system.to_deepmd_raw(outdir)
+    labeled_system.to_deepmd_npy(outdir)
 
 if __name__ == "__main__":
     main()

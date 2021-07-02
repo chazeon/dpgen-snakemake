@@ -1,1 +1,40 @@
+
 configfile: "config.yml"
+
+from pathlib import Path
+
+def curr_iter():
+    return max([
+        int(dirname.name.split(".")[1])
+        for dirname in Path("dp_run").glob("iter.*")
+    ] + [0])
+
+
+rule dp_run_train_target:
+    params:
+    input:
+        expand("dp_run/iter.{i:06d}/00.train/{igraph:03d}/params.yml",
+            i=curr_iter(), igraph=range(config["dp_run"]["train"]["numb_models"]))
+
+rule dp_run_train_task:
+    input:
+        params=config["dp_run"]["train"]["params"],
+        data=lambda w: [
+            "dp_run/iter.{i}/00.train/data/init",
+            *expand("dp_run/iter.{{i}}/00.train/data/iter.{j:06d}",
+                j=range(int(w["i"]) - 1))
+        ],
+        job_sh=expand("{templates}/job.sh", templates=config["dp_run"]["train"]["templates"])
+    output:
+        params="dp_run/iter.{i}/00.train/{igraph}/params.yml",
+        job_sh="dp_run/iter.{i}/00.train/{igraph}/job.sh",
+    params:
+        s_param=lambda w: [
+            "-s ../data/init",
+            *expand("-s ../data/iter.{j:06d}", j=range(int(w["i"]) - 1))
+        ]
+    shell:
+        '''
+        python3 scripts/make-dpmd-params.py {input.params} {params.s_param} 1> {output.params}
+        cp {input.job_sh} {output.job_sh}
+        '''

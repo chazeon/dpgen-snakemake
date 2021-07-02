@@ -9,7 +9,7 @@ rule dp_init_target:
         expand("dp_init/V{volume}/job-bundle.sh",
             volume=config["eos"]["volumes"])
 
-rule init_md_run:
+rule dp_init_md_run:
     wildcard_constraints:
         iperturb="\d+"
     output:
@@ -56,3 +56,21 @@ rule job_bundle:
         '''
         cp {input.job_sh} {output.job_sh}
         '''
+
+rule dp_init_collect:
+    input: 
+        vasprun=expand("dp_init/V{volume}/{iperturb:04d}/vasprun.xml",
+            volume=config["eos"]["volumes"],
+            iperturb=range(config["dp_init"]["perturb"]["number"])
+        ),
+    params:
+        env_deepmd=config["env"]["deepmd"],
+        elements=",".join(config["system"]["elements"]),
+    output:
+        output=directory("dp_run/iter.000000/00.train/data/init"),
+    shell:
+        '''
+        source {params.env_deepmd}
+        python3 scripts/make-dpmd-data.py {input.vasprun} -t {params.elements} -o {output}
+        '''
+    

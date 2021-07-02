@@ -5,6 +5,9 @@ system:
     Al: /work2/05774/tg850736/stampede2/20210519-VASP/vasp6.2.0/potpaw_PBE/Al/POTCAR
     O:  /work2/05774/tg850736/stampede2/20210519-VASP/vasp6.2.0/potpaw_PBE/O/POTCAR
     H:  /work2/05774/tg850736/stampede2/20210519-VASP/vasp6.2.0/potpaw_PBE/H/POTCAR
+env:
+  vasp: "./env/machine/stampede2/vasp.env"
+  deepmd: "./env/machine/stampede2/deepmd.env"
 eos:
   init_structure: "POSCAR"
   volumes:
@@ -41,4 +44,7 @@ dp_init:
 dp_run:
   iterations: []
   train:
-  
+    numb_models: 4
+    params: "templates/dp_run/00.train/params.yml"
+    templates: "templates/dp_run/00.train"
+  model_devi:

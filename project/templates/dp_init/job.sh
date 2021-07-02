@@ -3,7 +3,7 @@
 #SBATCH -o %j.out                    
 #SBATCH -e %j.err 
 #SBATCH -n 68
-#SBATCH -N 1
+#SBATCH -N 2
 #SBATCH -p development
 #SBATCH -t 02:00:00                      
 
