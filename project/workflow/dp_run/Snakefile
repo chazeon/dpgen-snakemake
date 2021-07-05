@@ -38,3 +38,28 @@ rule dp_run_train_task:
         python3 scripts/make-dpmd-params.py {input.params} {params.s_param} 1> {output.params}
         cp {input.job_sh} {output.job_sh}
         '''
+
+rule dp_run_freeze_target:
+    input:
+        expand("dp_run/iter.{i:06d}/00.train/graph.{igraph:03d}.pb",
+            i=curr_iter(), igraph=range(config["dp_run"]["train"]["numb_models"]))
+
+rule dp_run_freeze:
+    input:
+        workdir="dp_run/iter.{i}/00.train/{igraph}",
+        tf_checkpoint="dp_run/iter.{i}/00.train/{igraph}/checkpoint",
+    output:
+        graph_pb="dp_run/iter.{i}/00.train/graph.{igraph}.pb",
+    params:
+        env_deepmd=config["env"]["deepmd"],
+        igraph=lambda w: w["igraph"]
+    shell:
+        '''
+        source {params.env_deepmd}
+        cd {input.workdir}
+        dp freeze -o ../graph.{params.igraph}.pb
+        '''
+    
+rule model_devi_target:
+    input:
+    output:
