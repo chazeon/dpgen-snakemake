@@ -52,4 +52,18 @@ dp_run:
     params: "templates/dp_run/00.train/params.yml"
     templates: "templates/dp_run/00.train"
   model_devi:
-    jobs:
+    templates: "templates/dp_run/01.model_devi"
+    tasks:
+      - TEMP: [100, 150, 300, 450]
+        NSTEPS: 2000
+        _by_key: ["TEMP"]
+
+      # - TEMP: [600, 750, 900, 1050]
+
+      # - TEMP: [1200, 1350, 1500, 1650]
+
+      # - TEMP: [1800, 1950, 2100, 2250]
+
+      # - TEMP: [2400, 2550, 2700, 2850]
+      
+      # - TEMP: [3000, 3150, 3300, 3450]
