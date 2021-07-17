@@ -1,11 +1,12 @@
 #!/bin/bash 
-#SBATCH -J vmd                           
+#SBATCH -J vm6                           
 #SBATCH -o %j.out                    
 #SBATCH -e %j.err 
-#SBATCH -n 68 # 68 per core                           
+#SBATCH -n 64
 #SBATCH -N 2
-#SBATCH -p normal
+#SBATCH -p compute
 #SBATCH -t 48:00:00                      
+#SBATCH -A TG-DMR180081                 
 
 
 JOBFILE="job.sh"

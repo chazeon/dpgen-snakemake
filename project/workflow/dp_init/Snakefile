@@ -2,38 +2,42 @@ configfile: "config.yml"
 
 rule dp_init_target:
     input: 
-        expand("dp_init/V{volume}/{iperturb:04d}",
-            volume=config["eos"]["volumes"],
-            iperturb=range(config["dp_init"]["perturb"]["number"])
-        ),
-        expand("dp_init/V{volume}/job-bundle.sh",
-            volume=config["eos"]["volumes"])
+        *[
+            "dp_init/{name}/{scale}/".format(name=s["name"], scale=x)
+            for s in config["system"]["systems"]
+            for x in s["scale"]
+        ]
+        # expand("dp_init/{isys}/x{scale}/",
+        #     isys=[s["name"] for s in config["system"]["systems"]],
+        #     scale="1.00"
+        # ),
+        # expand("dp_init/{isys}/x{scale}/job-bundle.sh",
 
 rule dp_init_md_run:
-    wildcard_constraints:
-        iperturb="\d+"
+    # wildcard_constraints:
+        # iperturb="\d+"
     output:
-        directory("dp_init/V{volume}/{iperturb}"),
-        INCAR=  "dp_init/V{volume}/{iperturb}/INCAR",
-        POSCAR= "dp_init/V{volume}/{iperturb}/POSCAR",
-        POTCAR= "dp_init/V{volume}/{iperturb}/POTCAR",
-        KPOINTS="dp_init/V{volume}/{iperturb}/KPOINTS",
-        job_sh="dp_init/V{volume}/{iperturb}/job.sh",
+        directory("dp_init/{isys}/{scale}"),
+        INCAR=    "dp_init/{isys}/{scale}/INCAR",
+        POSCAR=   "dp_init/{isys}/{scale}/POSCAR",
+        POTCAR=   "dp_init/{isys}/{scale}/POTCAR",
+        KPOINTS=  "dp_init/{isys}/{scale}/KPOINTS",
+        job_sh=   "dp_init/{isys}/{scale}/job.sh",
     input:
         INCAR=  expand("{templates}/INCAR", templates=config["dp_init"]["templates"]),
         KPOINTS=expand("{templates}/KPOINTS", templates=config["dp_init"]["templates"]),
-        POSCAR="relax/V{volume}/CONTCAR",
+        POSCAR="relax/{isys}/{scale}/CONTCAR",
         job_sh=expand("{templates}/job.sh", templates=config["dp_init"]["templates"]),
     params:
-        supercell=config["dp_init"]["supercell"],
+        supercell=lambda w: config["dp_init"]["supercell"][w.isys],
         elements=",".join(config["system"]["elements"]),
         potcars=[
             config["system"]["potcars"][elem]
             for elem in config["system"]["elements"]
         ]
     run:
-        perturb_box=config["dp_init"]["perturb"]["box"] if int(wildcards.iperturb) != 0 else 0
-        perturb_atom=config["dp_init"]["perturb"]["atom"] if int(wildcards.iperturb) != 0 else 0
+        # perturb_box=config["dp_init"]["perturb"]["box"] if int(wildcards.iperturb) != 0 else 0
+        # perturb_atom=config["dp_init"]["perturb"]["atom"] if int(wildcards.iperturb) != 0 else 0
     
         shell(
             '''
@@ -41,7 +45,7 @@ rule dp_init_md_run:
             cp {input.KPOINTS} {output.KPOINTS}
             cat {input.POSCAR} \\
             | python3 scripts/make-supercell.py -n {params.supercell} -t {params.elements} \\
-            | python3 scripts/disturb-lattice.py --d-cell {perturb_box} --d-atom {perturb_atom} 1> {output.POSCAR}
+            1> {output.POSCAR}
             cat {params.potcars} 1> {output.POTCAR}
             cp {input.job_sh} {output.job_sh}
             '''
@@ -59,10 +63,11 @@ rule job_bundle:
 
 rule dp_init_collect:
     input: 
-        vasprun=expand("dp_init/V{volume}/{iperturb:04d}/vasprun.xml",
-            volume=config["eos"]["volumes"],
-            iperturb=range(config["dp_init"]["perturb"]["number"])
-        ),
+        vasprun=[
+            "dp_init/{name}/{scale}/vasprun.xml".format(name=s["name"], scale=x)
+            for s in config["system"]["systems"]
+            for x in s["scale"]
+        ],
     params:
         env_deepmd=config["env"]["deepmd"],
         elements=",".join(config["system"]["elements"]),

@@ -4,13 +4,14 @@ configfile: "config.yml"
 from pathlib import Path
 import itertools
 from copy import deepcopy
-import yaml
+import yaml, json
 from functools import lru_cache
 
 def curr_iter():
     return max([
         int(dirname.name.split(".")[1])
         for dirname in Path("dp_run").glob("iter.*")
+        if Path(dirname).is_dir()
     ] + [0])
 
 
@@ -35,7 +36,7 @@ rule dp_run_train_task:
     params:
         s_param=lambda w: [
             "-s ../data/init",
-            *expand("-s ../data/iter.{j:06d}", j=range(int(w["i"]) - 1))
+            *expand("-s ../data/iter.{j:06d}", j=range(int(w["i"])))
         ]
     shell:
         '''
@@ -43,104 +44,237 @@ rule dp_run_train_task:
         cp {input.job_sh} {output.job_sh}
         '''
 
-rule dp_run_freeze_target:
+rule dp_run_graph_target:
     input:
         expand("dp_run/iter.{i:06d}/00.train/graph.{igraph:03d}.pb",
             i=curr_iter(), igraph=range(config["dp_run"]["train"]["numb_models"]))
 
-rule dp_run_freeze:
+rule dp_run_graph_copy:
     input:
-        workdir="dp_run/iter.{i}/00.train/{igraph}",
-        tf_checkpoint="dp_run/iter.{i}/00.train/{igraph}/checkpoint",
+        graph="dp_run/iter.{i}/00.train/{igraph}/graph.pb",
     output:
-        graph_pb="dp_run/iter.{i}/00.train/graph.{igraph}.pb",
-    params:
-        env_deepmd=config["env"]["deepmd"],
-        igraph=lambda w: w["igraph"]
+        graph="dp_run/iter.{i}/00.train/graph.{igraph}.pb",
     shell:
         '''
-        source {params.env_deepmd}
-        cd {input.workdir}
-        dp freeze -o ../graph.{params.igraph}.pb
+        cp {input.graph} {output.graph}
         '''
 
-# @lru_cache()
-def iter_tasks(params, by_key: list = None):
-    if by_key is None: by_key = params["_by_key"]
-    def _iter():
-        vals = [params[k] for k in by_key]
-        for vals in itertools.product(*vals):
-            _params = deepcopy(params)
-            for k, v in zip(by_key, vals):
-                _params[k] = v
-            yield _params
-    return list(_iter())
+# rule dp_run_freeze_target:
+#     input:
+#         expand("dp_run/iter.{i:06d}/00.train/graph.{igraph:03d}.pb",
+#             i=curr_iter(), igraph=range(config["dp_run"]["train"]["numb_models"]))
+
+# rule dp_run_freeze:
+#     input:
+#         workdir="dp_run/iter.{i}/00.train/{igraph}",
+#         tf_checkpoint="dp_run/iter.{i}/00.train/{igraph}/checkpoint",
+#     output:
+#         graph_pb="dp_run/iter.{i}/00.train/graph.{igraph}.pb",
+#     params:
+#         env_deepmd=config["env"]["deepmd"],
+#         igraph=lambda w: w["igraph"]
+#     shell:
+#         '''
+#         set +eu
+#         source {params.env_deepmd}
+#         cd {input.workdir}
+#         # dp freeze -o ../graph.{params.igraph}.pb
+#         cp graph.tmp.pb ../graph.{params.igraph}.pb
+#         '''
+
+# rule dp_run_model_devi_graph:
+#     input:
+#         graph="dp_run/iter.{i}/00.train/graph.{igraph}.pb",
+#     output:
+#         graph="dp_run/iter.{i}/01.model_devi/graph.{igraph}.pb",
+#     shell:
+#         '''
+#         cp {input.graph} $(dirname {output.graph})
+#         '''
+
+
+@lru_cache()
+def devi_tasks(idx_iter):
+    import json
+    with open(f"tasks/iter.{idx_iter:06d}.out.json") as fp:
+        return json.load(fp)
 
 rule dp_run_model_devi_target:
     input:
-        graphs=expand("dp_run/iter.{i:06d}/01.model_devi/graph.{igraph:03d}.pb",
-            i=curr_iter(), igraph=range(config["dp_run"]["train"]["numb_models"])),
-        tasks=expand("dp_run/iter.{i:06d}/01.model_devi/task.{itask:06d}/volume.{volume}/{iperturb:04d}",
-            i=curr_iter(),
-            itask=range(len(iter_tasks(config["dp_run"]["model_devi"]["tasks"][curr_iter()]))),
-            volume=config["eos"]["volumes"],
-            iperturb=range(config["dp_init"]["perturb"]["number"]),
-        ),
-        job_bundle=expand("dp_run/iter.{i:06d}/01.model_devi/task.{itask:06d}/volume.{volume}/job-bundle.sh",
-            i=curr_iter(),
-            itask=range(len(iter_tasks(config["dp_run"]["model_devi"]["tasks"][curr_iter()]))),
-            volume=config["eos"]["volumes"],
-        )
+        tasks=lambda w: [
+            "dp_run/iter.{i:06d}/01.model_devi/{path}".format(
+                i=curr_iter(), path=path, 
+            ) for path in devi_tasks(curr_iter()).keys()
+        ]
     
-rule dp_run_model_devi_graph:
-    input:
-        graph="dp_run/iter.{i}/00.train/graph.{igraph}.pb",
-    output:
-        graph="dp_run/iter.{i}/01.model_devi/graph.{igraph}.pb",
-    shell:
-        '''
-        cp {input.graph} $(dirname {output.graph})
-        '''
 
 rule dp_run_model_devi_task:
     wildcard_constraints:
-        iperturb="\d+"
+        task=r"[^/]+/[^/]+"
     input:
-        lammps_input=expand("{templates}/input.lmp", templates=config["dp_run"]["model_devi"]["templates"]),
-        job_sh=      expand("{templates}/job.sh",    templates=config["dp_run"]["model_devi"]["templates"]),
-        vasp_structure="dp_init/V{V}/{iperturb}/POSCAR",
+        lammps_input=   expand("{templates}/input.lmp", templates=config["dp_run"]["model_devi"]["templates"]),
+        job_sh=         expand("{templates}/job.sh",    templates=config["dp_run"]["model_devi"]["templates"]),
+        vasp_structure= lambda w: devi_tasks(int(w.i))[w.task]["conf"]["init"],
+        graph=          expand("dp_run/iter.{{i}}/00.train/graph.{igraph:03d}.pb", igraph=range(config["dp_run"]["train"]["numb_models"]))
     output:
-        workdir=  directory("dp_run/iter.{i}/01.model_devi/task.{itask}/volume.{V}/{iperturb}"),
-        lammps_input_params="dp_run/iter.{i}/01.model_devi/task.{itask}/volume.{V}/{iperturb}/input.lmp.yml",
-        lammps_input=       "dp_run/iter.{i}/01.model_devi/task.{itask}/volume.{V}/{iperturb}/input.lmp",
-        vasp_structure=     "dp_run/iter.{i}/01.model_devi/task.{itask}/volume.{V}/{iperturb}/conf.POSCAR",
-        lammps_structure=   "dp_run/iter.{i}/01.model_devi/task.{itask}/volume.{V}/{iperturb}/conf.lmp",
-        job_sh=             "dp_run/iter.{i}/01.model_devi/task.{itask}/volume.{V}/{iperturb}/job.sh",
+        workdir=  directory("dp_run/iter.{i}/01.model_devi/{task}"),
+        traj=     directory("dp_run/iter.{i}/01.model_devi/{task}/traj"),
+        lammps_input_params="dp_run/iter.{i}/01.model_devi/{task}/input.lmp.yml",
+        lammps_input=       "dp_run/iter.{i}/01.model_devi/{task}/input.lmp",
+        vasp_structure=     "dp_run/iter.{i}/01.model_devi/{task}/conf.POSCAR",
+        lammps_structure=   "dp_run/iter.{i}/01.model_devi/{task}/conf.lmp",
+        job_sh=             "dp_run/iter.{i}/01.model_devi/{task}/job.sh",
+        graph=       expand("dp_run/iter.{{i}}/01.model_devi/{{task}}/graph.{igraph:03d}.pb", igraph=range(config["dp_run"]["train"]["numb_models"]))
     params:
         env_deepmd=config["env"]["deepmd"],
-        lammps_input_params=lambda w: iter_tasks(config["dp_run"]["model_devi"]["tasks"][curr_iter()])[int(w["itask"])],
+        task=lambda w: devi_tasks(int(w.i))[w.task],
+        # lammps_input_params=lambda w: iter_tasks(config["dp_run"]["model_devi"]["tasks"][curr_iter()])[int(w["itask"])],
     run:
         shell('''
         mkdir -p {output.workdir}
+        mkdir -p {output.traj}
         ''')
+
         with open(output.lammps_input_params, "w") as fp:
-            yaml.safe_dump(dict(params.lammps_input_params), fp)
+            json.dump(params.task["param"], fp, indent=2)
+
+        transform = params.task["conf"]["transform"]
+
         shell('''
+        set +eu
         source {params.env_deepmd}
         python3 scripts/make-lammps-input.py {input.lammps_input} {output.lammps_input_params} 1> {output.lammps_input}
 
-        cp {input.vasp_structure} {output.vasp_structure}
+        cat {input.vasp_structure} | python3 scripts/make-scaled-lattice.py -{transform} 1> {output.vasp_structure}
+
         python3 scripts/make-lammps-structure.py {output.vasp_structure} {output.lammps_structure} --ofmt=lammps/lmp
+
+        for g in {input.graph}
+        do
+            cp $g {output.workdir}
+        done
 
         cp {input.job_sh} {output.job_sh}
         ''')
 
-rule dp_run_job_bundle:
+checkpoint dp_run_filter_devi:
     input:
-        job_sh=expand("{templates}/job-bundle.sh", templates=config["dp_run"]["model_devi"]["templates"]),
+        model_devi=[
+            "dp_run/iter.{i:06d}/01.model_devi/{path}/model_devi.out".format(
+                i=curr_iter(), path=path, 
+            ) for path in devi_tasks(curr_iter()).keys()
+        ]
     output:
-        job_sh="dp_run/iter.{i}/01.model_devi/task.{itask}/volume.{volume}/job-bundle.sh"
+        accurate="dp_run/iter.{i}/01.model_devi.accurate.dat",
+        candidate="dp_run/iter.{i}/01.model_devi.candidate.dat",
+        failed="dp_run/iter.{i}/01.model_devi.failed.dat",
+
+        candidate_shuffled="dp_run/iter.{i}/01.model_devi.candidate.shuffled.dat",
+
+    params:
+        f_limit_lo=min(config["dp_run"]["model_devi"]["limits"]["f"]),
+        f_limit_hi=max(config["dp_run"]["model_devi"]["limits"]["f"]),
     shell:
         '''
-        cp {input.job_sh} {output.job_sh}
+        python3 scripts/filter-devi.py {input.model_devi} -f 0.0e+0              {params.f_limit_lo} 1> {output.accurate}
+        python3 scripts/filter-devi.py {input.model_devi} -f {params.f_limit_lo} {params.f_limit_hi} 1> {output.candidate}
+        python3 scripts/filter-devi.py {input.model_devi} -f {params.f_limit_hi}              1.0e+5 1> {output.failed}
+
+        cat {output.candidate} | shuf 1> {output.candidate_shuffled}
         '''
+
+
+def get_fp_candidates(iiter):
+    with checkpoints.dp_run_filter_devi.get(i="%06d" % iiter).output.candidate_shuffled.open() as fp:
+        return [line.strip() for line in fp.readlines()]
+
+rule dp_run_fp_target:
+    input:
+        lambda w: expand("dp_run/iter.{i:06d}/02.fp/{iconf:06d}",
+            iconf=range(min(
+                len(get_fp_candidates(curr_iter())),
+                config["dp_run"]["fp"]["max_conf"]
+            )),
+            i=curr_iter()
+        )
+    
+rule dp_run_fp:
+    wildcard_constraints:
+        iconf="\d+"
+    input:
+        lammps_structure=lambda w: get_fp_candidates(curr_iter())[int(w.iconf)],
+        KPOINTS=expand("{templates}/KPOINTS", templates=config["dp_run"]["fp"]["templates"]),
+        INCAR=expand("{templates}/INCAR", templates=config["dp_run"]["fp"]["templates"]),
+        # POTCAR=expand("{templates}/KPOINTS", templates=config["dp_run"]["fp"]["templates"]),
+        job_sh=expand("{templates}/job.sh", templates=config["dp_run"]["fp"]["templates"]),
+        POTCARs=[
+            config["system"]["potcars"][elem]
+            for elem in config["system"]["elements"]
+        ],
+    output:
+        directory("dp_run/iter.{i}/02.fp/{iconf}"),
+        INCAR=    "dp_run/iter.{i}/02.fp/{iconf}/INCAR",
+        KPOINTS=  "dp_run/iter.{i}/02.fp/{iconf}/KPOINTS",
+        POTCAR=   "dp_run/iter.{i}/02.fp/{iconf}/POTCAR",
+        POSCAR=   "dp_run/iter.{i}/02.fp/{iconf}/POSCAR",
+        job_sh=   "dp_run/iter.{i}/02.fp/{iconf}/job.sh",
+        lammps_structure="dp_run/iter.{i}/02.fp/{iconf}/conf.lmp",
+    params:
+        type_map=",".join(config["system"]["elements"]),
+        env_deepmd=config["env"]["deepmd"],
+    shell:
+        '''
+        set +eu
+        source {params.env_deepmd}
+        
+        cp {input.INCAR} {output.INCAR}
+        cp {input.KPOINTS} {output.KPOINTS}
+        cat {input.POTCARs} 1> {output.POTCAR}
+        cp {input.job_sh} {output.job_sh}
+        cp {input.lammps_structure} {output.lammps_structure}
+        python3 scripts/make-vasp-structure.py -t {params.type_map} {output.lammps_structure} {output.POSCAR}
+        '''
+
+rule dp_run_fp_collect:
+    input: 
+        vasprun=lambda w: expand("dp_run/iter.{i:06d}/02.fp/{iconf:06d}/vasprun.xml",
+            iconf=range(min(
+                len(get_fp_candidates(curr_iter())),
+                config["dp_run"]["fp"]["max_conf"]
+            )),
+            i=curr_iter()
+        ),
+        old="dp_run/iter.{i:06d}/00.train/".format(i=curr_iter())
+    params:
+        env_deepmd=config["env"]["deepmd"],
+        elements=",".join(config["system"]["elements"]),
+    output:
+        workdir=directory("dp_run/iter.{i:06d}/00.train/".format(i=curr_iter() + 1)),
+        init=   directory("dp_run/iter.{i:06d}/00.train/data/init".format(i=curr_iter() + 1)),
+        curr=   directory("dp_run/iter.{i:06d}/00.train/data/iter.{j:06d}".format(i=curr_iter() + 1, j=curr_iter())),
+        iters=[
+            directory("dp_run/iter.{i:06d}/00.train/data/iter.{j:06d}".format(i=curr_iter() + 1, j=j))
+            for j in range(curr_iter() + 1)
+        ]
+
+    shell:
+        '''
+        set +eu
+        source {params.env_deepmd}
+
+        mkdir -p {output.workdir}
+
+        cp -rv {input.old}/* {output.workdir}
+        rm {output.workdir}/*/lcurve.out
+        rm {output.workdir}/*/params.yml
+        rm {output.workdir}/*/*.out
+        rm {output.workdir}/*/*.err
+        rm {output.workdir}/*/*.pb
+        rm {output.workdir}/*/out.json
+        rm {output.workdir}/*/job.sh
+        rm {output.workdir}/graph.*.pb
+
+        mkdir -v {output.curr}
+        python3 scripts/make-dpmd-data.py {input.vasprun} -t {params.elements} -o {output.curr}
+        '''
+    

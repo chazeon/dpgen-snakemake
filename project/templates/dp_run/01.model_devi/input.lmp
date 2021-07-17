@@ -1,8 +1,8 @@
-variable        NSTEPS          equal {{NSTEPS}}
-variable        THERMO_FREQ     equal 10
-variable        DUMP_FREQ       equal 10
-variable        TEMP            equal {{TEMP}}
-variable        PRES            equal -1.000000
+variable        NSTEPS          equal {{nsteps}}
+variable        THERMO_FREQ     equal {{thermo_freq}}
+variable        DUMP_FREQ       equal {{dump_freq}}
+variable        TEMP            equal {{temp}}
+variable        PRES            equal {{pres if pres else 0.0}}
 variable        TAU_T           equal 0.100000
 variable        TAU_P           equal 0.500000
 variable        restart         equal 0
@@ -16,11 +16,11 @@ neighbor        1.0 bin
 box          tilt large
 if "${restart} > 0" then "read_restart dpgen.restart.*" else "read_data conf.lmp"
 change_box   all triclinic
-mass            1 26.981539
-mass            2 15.999400
-mass            3 1.007940
+{% for m in mass %}
+mass            {{loop.index}} {{m}}
+{% endfor %}
 
-pair_style      deepmd ../../../graph.000.pb ../../../graph.001.pb ../../../graph.002.pb ../../../graph.003.pb  out_freq ${THERMO_FREQ} out_file model_devi.out 
+pair_style      deepmd graph.000.pb graph.001.pb graph.002.pb graph.003.pb  out_freq ${THERMO_FREQ} out_file model_devi.out 
 pair_coeff      
 
 thermo_style    custom step temp pe ke etotal press vol lx ly lz xy xz yz
@@ -28,8 +28,14 @@ thermo          ${THERMO_FREQ}
 dump            1 all custom ${DUMP_FREQ} traj/*.lammpstrj id type x y z
 restart         10000 dpgen.restart
 
-if "${restart} == 0" then "velocity        all create ${TEMP} {{SEED}}"
+if "${restart} == 0" then "velocity        all create ${TEMP} {{seed}}"
+
+{% if fix == 'nvt' %}
 fix             1 all nvt temp ${TEMP} ${TEMP} ${TAU_T}
+{% endif %}
+{% if fix == 'npt' %}
+fix             1 all npt temp ${TEMP} ${TEMP} ${TAU_T} iso ${PRES} ${PRES} ${TAU_P}
+{% endif %}
 
 timestep        0.002000
 run             ${NSTEPS} upto

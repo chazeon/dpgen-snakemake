@@ -1,5 +1,6 @@
 import click
 import dpdata
+import sys
 
 
 @click.command()
@@ -12,8 +13,14 @@ def main(files, type_map, outdir):
     labeled_system = dpdata.LabeledSystem()
 
     for ofile in files:
-        s = dpdata.LabeledSystem(ofile, type_map=type_map)
-        labeled_system.append(s)
+        try:
+            s = dpdata.LabeledSystem(ofile, type_map=type_map)
+            labeled_system.append(s)
+            print(ofile)
+            print(len(s))
+        except Exception as e:
+            sys.stderr.write(f"{ofile} might be corrupted.\n")
+            sys.stderr.write(str(e) + "\n")
 
     labeled_system.to_deepmd_raw(outdir)
     labeled_system.to_deepmd_npy(outdir)

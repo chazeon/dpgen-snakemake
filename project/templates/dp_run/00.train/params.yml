@@ -2,24 +2,24 @@ model:
   descriptor:
     axis_neuron: 16
     neuron: [25, 50, 100]
-    rcut: 6.0
-    rcut_smth: 0.5
+    rcut: 6.5
+    rcut_smth: 4.5
     resnet_dt: true
     seed: 1
-    sel: [64, 128, 64]
+    sel: [128, 256, 128]
     type: se_a
   fitting_net:
-    neuron: [240, 240, 240]
+    neuron: [240, 120, 60, 30, 15]
     resnet_dt: true
     seed: 1
   type_map: [Al, O, H]
 learning_rate:
   decay_steps: 5000
-  start_lr: 0.001
-  stop_lr: 3.51e-08
+  start_lr: 5.00e-04
+  stop_lr:  1.00e-08
   type: exp
 loss:
-  start_pref_e: 0.02
+  start_pref_e: 0.2
   limit_pref_e: 1.0
   start_pref_f: 1000.0
   limit_pref_f: 1.0
@@ -38,6 +38,6 @@ training:
   save_freq: 1000
   seed: 1
   set_prefix: set
-  stop_batch: 400000
+  stop_batch: 200000
   systems: []
   time_training: true

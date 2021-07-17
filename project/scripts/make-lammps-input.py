@@ -18,7 +18,7 @@ def main(template, params):
     with open(template) as fp:
         t = jinja2.Template(fp.read(), keep_trailing_newline=True)
 
-    params["SEED"] = random.randint(0, RAND_MAX)
+    params["seed"] = random.randint(0, RAND_MAX)
 
     sys.stdout.write(t.render(**params))
 

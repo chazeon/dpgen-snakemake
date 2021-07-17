@@ -1,0 +1,44 @@
+configfile: "config.yml"
+
+rule relax_target:
+    input:
+        *[
+            "relax/{name}/{scale}/".format(name=s["name"], scale=x)
+            for s in config["system"]["systems"]
+            for x in s["scale"]
+        ]
+
+rule relax_run:
+    wildcard_constraints:
+        scale=r"[xXvV]\d+(\.?\d*([eE][+-]?\d+)?)?"
+    output:
+        directory("relax/{isys}/{scale}/"),
+        INCAR=    "relax/{isys}/{scale}/INCAR",
+        POSCAR=   "relax/{isys}/{scale}/POSCAR",
+        POTCAR=   "relax/{isys}/{scale}/POTCAR",
+        KPOINTS=  "relax/{isys}/{scale}/KPOINTS",
+        job_sh=   "relax/{isys}/{scale}/job.sh",
+    input:
+        INCAR=  expand("{templates}/INCAR", templates=config["relax"]["templates"]),
+        KPOINTS=expand("{templates}/KPOINTS", templates=config["relax"]["templates"]),
+        POSCAR="structures/{isys}/POSCAR",
+        job_sh=expand("{templates}/job.sh", templates=config["relax"]["templates"]),
+    params:
+        supercell=config["dp_init"]["supercell"],
+        elements=",".join(config["system"]["elements"]),
+        potcars=[
+            config["system"]["potcars"][elem]
+            for elem in config["system"]["elements"]
+        ]
+    run:
+        shell(
+            '''
+            cp {input.INCAR} {output.INCAR}
+            cp {input.KPOINTS} {output.KPOINTS}
+            cat {input.POSCAR} \\
+                | python3 scripts/make-scaled-lattice.py -{wildcards.scale} \\
+                1> {output.POSCAR}
+            cat {params.potcars} 1> {output.POTCAR}
+            cp {input.job_sh} {output.job_sh}
+            '''
+        )

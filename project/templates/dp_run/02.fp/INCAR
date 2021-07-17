@@ -14,10 +14,10 @@ METAGGA  = SCAN
 # LASPH = .TRUE.
 
 #Relaxation, conjugate gradient algo
-IBRION = 0
-POTIM = 2
-NSW = 30
-ISIF = 4
+IBRION = -1
+POTIM = 3
+NSW = 0
+ISIF = 2
 MDALGO = 2
 TEBEG = 500
 

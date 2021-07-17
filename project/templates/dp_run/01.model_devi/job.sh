@@ -1,14 +1,20 @@
 #!/bin/bash 
-#SBATCH -J vmd                           
+#SBATCH -J vm5                           
 #SBATCH -o %j.out                    
 #SBATCH -e %j.err 
-#SBATCH -n 68
-#SBATCH -N 2
-#SBATCH -p normal
-#SBATCH -t 48:00:00                      
+#SBATCH -A col146
+#SBATCH -p gpu-debug
+#SBATCH -t 00:30:00
+#SBATCH --nodes 1
+#SBATCH --gpus 1
+#SBATCH --ntasks-per-node 10
+#SBATCH --mem 96G
 
-source /home1/05774/tg850736/WORK2/20210529-deepmd/20210628-dpgen-mphys/project/env/machine/stampede2/deepmd.env
-ibrun lmp -in input.lmp 1> lmp.out 2> lmp.err
+module load gpu
+
+source /home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/env/machine/expanse/deepmd.env
+
+lmp -in input.lmp 1> lmp.out 2> lmp.err
 if [ $? -eq 0 ]
 then
     touch lmp.done

@@ -1,0 +1,247 @@
+000.HC.NVT:
+  path: "000.HC.NVT.HM{param[mass][2]:.02f}/{conf_name}.T{param[temp]:04d}"
+  confs:
+    "005.V36.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V36.0/CONTCAR"
+      transform: x1.0
+    "005.V38.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V38.0/CONTCAR"
+      transform: x1.0
+    "005.V40.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V40.0/CONTCAR"
+      transform: x1.0
+    "005.V42.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V42.0/CONTCAR"
+      transform: x1.0
+    "005.V44.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V44.0/CONTCAR"
+      transform: x1.0
+    "005.V46.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V46.0/CONTCAR"
+      transform: x1.0
+    "005.V48.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V48.0/CONTCAR"
+      transform: x1.0
+    "005.V50.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V50.0/CONTCAR"
+      transform: x1.0
+    "001.V110.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/001/V110.0/CONTCAR"
+      transform: x1.0
+    "001.V112.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/001/V112.0/CONTCAR"
+      transform: x1.0
+    "001.V114.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/001/V114.0/CONTCAR"
+      transform: x1.0
+    "001.V116.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/001/V116.0/CONTCAR"
+      transform: x1.0
+    "002.V110.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/002/V110.0/CONTCAR"
+      transform: x1.0
+    "002.V112.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/002/V112.0/CONTCAR"
+      transform: x1.0
+    "002.V114.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/002/V114.0/CONTCAR"
+      transform: x1.0
+    "002.V116.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/002/V116.0/CONTCAR"
+      transform: x1.0
+    "004.V110.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/004/V110.0/CONTCAR"
+      transform: x1.0
+    "004.V112.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/004/V112.0/CONTCAR"
+      transform: x1.0
+    "004.V114.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/004/V114.0/CONTCAR"
+      transform: x1.0
+    "004.V116.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/004/V116.0/CONTCAR"
+      transform: x1.0
+  fixes:
+    fix: "nvt"
+    nsteps: 2000
+    thermo_freq: 5
+    dump_freq: 5
+  vars:
+    temp: [25, 50]
+    mass: 
+      # - [16.000000, 16.000000, 16.000000]
+      # - [26.981539, 15.999400,  5.000000]
+      # - [26.981539, 15.999400,  2.000000]
+      - [26.981539, 15.999400,  1.007940]
+
+
+001.HC.NVT:
+  path: "001.HC.NVT.HM{param[mass][2]:.02f}/{conf_name}.T{param[temp]:04d}"
+  confs:
+    "005.V36.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V36.0/CONTCAR"
+      transform: x1.0
+    "005.V38.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V38.0/CONTCAR"
+      transform: x1.0
+    "005.V40.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V40.0/CONTCAR"
+      transform: x1.0
+    "005.V42.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V42.0/CONTCAR"
+      transform: x1.0
+    "005.V44.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V44.0/CONTCAR"
+      transform: x1.0
+    "005.V46.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V46.0/CONTCAR"
+      transform: x1.0
+    "005.V48.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V48.0/CONTCAR"
+      transform: x1.0
+    "005.V50.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V50.0/CONTCAR"
+      transform: x1.0
+    "001.V110.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/001/V110.0/CONTCAR"
+      transform: x1.0
+    "001.V112.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/001/V112.0/CONTCAR"
+      transform: x1.0
+    "001.V114.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/001/V114.0/CONTCAR"
+      transform: x1.0
+    "001.V116.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/001/V116.0/CONTCAR"
+      transform: x1.0
+    "002.V110.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/002/V110.0/CONTCAR"
+      transform: x1.0
+    "002.V112.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/002/V112.0/CONTCAR"
+      transform: x1.0
+    "002.V114.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/002/V114.0/CONTCAR"
+      transform: x1.0
+    "002.V116.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/002/V116.0/CONTCAR"
+      transform: x1.0
+    "004.V110.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/004/V110.0/CONTCAR"
+      transform: x1.0
+    "004.V112.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/004/V112.0/CONTCAR"
+      transform: x1.0
+    "004.V114.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/004/V114.0/CONTCAR"
+      transform: x1.0
+    "004.V116.0":
+      init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/004/V116.0/CONTCAR"
+      transform: x1.0
+  fixes:
+    fix: "nvt"
+    nsteps: 2000
+    thermo_freq: 5
+    dump_freq: 5
+  vars:
+    temp: [100, 200, 300]
+    mass: 
+      # - [16.000000, 16.000000, 16.000000]
+      - [26.981539, 15.999400,  1.007940]
+
+
+
+# 002.HC.NVT:
+#   path: "002.HC.NVT.HM{param[mass][2]:.02f}/{conf_name}.T{param[temp]:04d}"
+#   confs:
+#     "005.V36.0":
+#       init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V36.0/CONTCAR"
+#       transform: x1.0
+#     "005.V38.0":
+#       init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V38.0/CONTCAR"
+#       transform: x1.0
+#     "005.V40.0":
+#       init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V40.0/CONTCAR"
+#       transform: x1.0
+#     "005.V42.0":
+#       init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V42.0/CONTCAR"
+#       transform: x1.0
+#     "005.V44.0":
+#       init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V44.0/CONTCAR"
+#       transform: x1.0
+#     "005.V46.0":
+#       init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V46.0/CONTCAR"
+#       transform: x1.0
+#     "005.V48.0":
+#       init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V48.0/CONTCAR"
+#       transform: x1.0
+#     "005.V50.0":
+#       init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V50.0/CONTCAR"
+#       transform: x1.0
+#     "001.V110.0":
+#       init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/001/V110.0/CONTCAR"
+#       transform: x1.0
+#     "001.V112.0":
+#       init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/001/V112.0/CONTCAR"
+#       transform: x1.0
+#     "001.V114.0":
+#       init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/001/V114.0/CONTCAR"
+#       transform: x1.0
+#     "001.V116.0":
+#       init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/001/V116.0/CONTCAR"
+#       transform: x1.0
+#     "002.V110.0":
+#       init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/002/V110.0/CONTCAR"
+#       transform: x1.0
+#     "002.V112.0":
+#       init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/002/V112.0/CONTCAR"
+#       transform: x1.0
+#     "002.V114.0":
+#       init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/002/V114.0/CONTCAR"
+#       transform: x1.0
+#     "002.V116.0":
+#       init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/002/V116.0/CONTCAR"
+#       transform: x1.0
+#     "004.V110.0":
+#       init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/004/V110.0/CONTCAR"
+#       transform: x1.0
+#     "004.V112.0":
+#       init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/004/V112.0/CONTCAR"
+#       transform: x1.0
+#     "004.V114.0":
+#       init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/004/V114.0/CONTCAR"
+#       transform: x1.0
+#     "004.V116.0":
+#       init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/004/V116.0/CONTCAR"
+#       transform: x1.0
+#   fixes:
+#     fix: "nvt"
+#     nsteps: 2000
+#     thermo_freq: 5
+#     dump_freq: 5
+#   vars:
+#     temp: [400, 500, 600]
+#     mass: 
+#       - [16.000000, 16.000000, 16.000000]
+#       - [26.981539, 15.999400,  5.000000]
+#       - [26.981539, 15.999400,  2.000000]
+#       - [26.981539, 15.999400,  1.007940]
+
+
+# 003.HC.NPT:
+  # path: "003.HC.NPT.HM{param[mass][2]:.02f}/P{param[pres]}.T{param[temp]:04d}"
+  # confs:
+  #   "005.V48.0":
+  #     init: "/home/chazeon/SCRATCH/qe-jobs/20210715-AlOOH-m5/dp_init/005/V48.0/CONTCAR"
+  #     transform: x1.0
+  # fixes:
+  #   fix: "npt"
+  #   nsteps: 2000
+  #   thermo_freq: 5
+  #   dump_freq: 5
+  # vars:
+  #   pres: [1, 5, 10, 15, 20, 25, 30, 35, 40, 60, 80, 100, 120, 140, 160]
+  #   temp: [300, 450, 600]
+  #   mass: 
+  #     - [16.000000, 16.000000, 16.000000]
+  #     - [26.981539, 15.999400,  1.007940]

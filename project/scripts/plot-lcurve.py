@@ -4,6 +4,7 @@ from matplotlib import colors, pyplot as plt
 import click
 from pathlib import Path
 from copy import deepcopy
+from io import StringIO
 
 
 COLORS = plt.rcParams["axes.prop_cycle"].by_key()["color"]
@@ -27,7 +28,12 @@ def main(**kwargs):
         label = Path(fname).parts[-2]
         color = colors.pop()
 
-        df = pandas.read_table(fname, sep=r"\s{2,}", header=0, index_col=0)
+        with open(fname) as fp:
+            lines = fp.readlines()
+            lines = [line for idx, line in enumerate(lines) if idx == 0 or "batch" not in line]
+        fp = StringIO("\n".join(lines))
+
+        df = pandas.read_table(fp, sep=r"\s{2,}", header=0, index_col=0)
         for colname in KEYS:
             ax = {
                 KEYS[0]: axes[0,0], KEYS[1]: axes[0,0],

@@ -1,5 +1,5 @@
 #!/bin/bash 
-#SBATCH -J vm6                           
+#SBATCH -J vmd                           
 #SBATCH -o %j.out                    
 #SBATCH -e %j.err 
 #SBATCH -n 64

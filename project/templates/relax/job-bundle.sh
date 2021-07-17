@@ -1,14 +1,12 @@
 #!/bin/bash 
-#SBATCH -J vm5                           
+#SBATCH -J vmd                           
 #SBATCH -o %j.out                    
 #SBATCH -e %j.err 
-#SBATCH -A col146
-#SBATCH -p gpu-shared
-#SBATCH -t 24:00:00
-#SBATCH --nodes 1
-#SBATCH --gpus 1
-#SBATCH --mem 96G
-#SBATCH --ntasks-per-node 10
+#SBATCH -n 64
+#SBATCH -N 2
+#SBATCH -p compute
+#SBATCH -t 48:00:00                      
+#SBATCH -A TG-DMR180081                 
 
 
 JOBFILE="job.sh"
