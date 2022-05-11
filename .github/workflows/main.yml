@@ -1,6 +1,4 @@
-# This is a basic workflow to help you get started with Actions
-
-name: CI
+name: Test workflow scripts
 
 on:
   push:
@@ -18,16 +16,21 @@ jobs:
       - uses: actions/checkout@v3
       
       - name: Setup conda environments
-        uses: conda-incubator/setup-miniconda@v2
+        uses: mamba-org/provision-with-micromamba@main
         with:
           environment-file: envs/mphys.yml
-          activate-environment: mphys
+          environment-name: mphys
+          cache-env: true
           
-      - run: conda info
-      - run: conda list
-      - run: conda config --show
+      - name: Show micromamba info
+        shell: bash -l {0}
+        run: |
+          micromamba info
+          micromamba list
+          pip -V
       
       - name: Test scripts
+        shell: bash -l {0}
         run: |
           cd project
-          pytest tests --cov=scripts
+          python -m pytest tests --cov=scripts

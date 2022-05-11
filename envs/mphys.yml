@@ -15,3 +15,8 @@ dependencies:
 - numpy
 - click
 - matplotlib
+- pip
+- pip:
+  - pytest
+  - pytest-cov
+  - pytest-fixtures
