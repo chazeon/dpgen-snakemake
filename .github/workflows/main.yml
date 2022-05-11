@@ -1,0 +1,38 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Test workflow scripts
+
+on:
+  push:
+    branches: [ v2 ]
+  pull_request:
+    branches: [ v2 ]
+
+  workflow_dispatch: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup conda environments
+        uses: mamba-org/provision-with-micromamba@main
+        with:
+          environment-file: envs/mphys.yml
+          environment-name: mphys
+          cache-env: true
+          
+      - name: Show micromamba info
+        shell: bash -l {0}
+        run: |
+          micromamba info
+          micromamba list
+          pip -V
+      
+      - name: Test scripts
+        shell: bash -l {0}
+        run: |
+          cd project
+          python -m pytest tests --cov=scripts
