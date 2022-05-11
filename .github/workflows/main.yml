@@ -32,5 +32,10 @@ jobs:
       - name: Test scripts
         shell: bash -l {0}
         run: |
-          cd project
-          python -m pytest tests --cov=scripts
+          pytest project --junit-xml pytest.xml --cov=scripts
+      
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+          files: "pytest.xml"
