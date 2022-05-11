@@ -1,0 +1,33 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+on:
+  push:
+    branches: [ v2 ]
+  pull_request:
+    branches: [ v2 ]
+
+  workflow_dispatch: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup conda environments
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          environment-file: envs/mphys.yml
+          activate-environment: mphys
+          
+      - run: conda info
+      - run: conda list
+      - run: conda config --show
+      
+      - name: Test scripts
+        run: |
+          cd project
+          pytest tests --cov=scripts
