@@ -10,11 +10,12 @@ from io import StringIO
 @click.command()
 @click.argument("fdevi", nargs=-1)
 @click.option("-f", "--f-limit", type=click.FLOAT, nargs=2, default=(1.50e-1, 3.50e-1))
-@click.option("-e", "--e-limit", type=click.FLOAT, nargs=2, default=(0.00e+5, 1.00e+5))
+# @click.option("-e", "--e-limit", type=click.FLOAT, nargs=2, default=(0.00e+5, 1.00e+5))
 @click.option("--traj", default="traj")
 @click.option("--test-exists", default=False, is_flag=True)
 @click.option("-o", "--output")
-def main(fdevi, f_limit, e_limit, output, **kwargs):
+# def main(fdevi, f_limit, e_limit, output, **kwargs):
+def main(fdevi, f_limit, output, **kwargs):
 
     sio = StringIO()
 
@@ -24,8 +25,8 @@ def main(fdevi, f_limit, e_limit, output, **kwargs):
         fname = Path(fname)
 
         for idx, row in df[
-            (df["max_devi_f"].between(min(f_limit), max(f_limit))) &
-            (df["max_devi_e"].between(min(e_limit), max(e_limit)))
+            (df["max_devi_f"].between(min(f_limit), max(f_limit)))# &
+            # (df["max_devi_e"].between(min(e_limit), max(e_limit)))
         ].iterrows():
 
             ftraj = fname.parent / kwargs.get("traj") / f"{idx}.lammpstrj"
