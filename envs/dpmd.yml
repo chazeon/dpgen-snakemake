@@ -1,0 +1,18 @@
+name: dpmd
+
+channels:
+  - deepmodeling
+  - nvidia
+  - conda-forge
+  - main
+
+dependencies:
+
+  - python=3.9
+
+  - cudatoolkit=11.3
+  - deepmd-kit=*[build=*_cuda11.3_gpu]
+  - lammps-dp
+  - libdeepmd=*[build=*_cuda11.3_gpu]
+  - libtensorflow_cc=*[build=cuda113hbf71e95_1] # Required for libdeep MD, conda-forge version doesn't work
+  - horovod
