@@ -39,3 +39,14 @@ jobs:
         if: always()
         with:
           files: "pytest.xml"
+      
+      - name: Publish coverage result
+        uses: codecov/codecov-action@v3.1.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          files: "coverage.xml"
+          flags: unittests # optional
+          name: codecov-umbrella # optional
+          fail_ci_if_error: true # optional (default = false)
+          verbose: true # optional (default = false)
+
