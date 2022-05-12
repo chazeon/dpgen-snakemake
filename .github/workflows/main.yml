@@ -32,7 +32,7 @@ jobs:
       - name: Test scripts
         shell: bash -l {0}
         run: |
-          pytest project --junit-xml pytest.xml --cov=scripts
+          pytest project/tests --junit-xml pytest.xml --cov=project/scripts
       
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1
