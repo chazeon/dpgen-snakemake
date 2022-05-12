@@ -7,19 +7,32 @@ from copy import deepcopy
 import yaml, json
 from functools import lru_cache
 
-def curr_iter():
-    return max([
-        int(dirname.name.split(".")[1])
-        for dirname in Path("dp_run").glob("iter.*")
-        if Path(dirname).is_dir()
-    ] + [0])
+envvars:
+    "DPGEN_ITER_ID"
 
+ITER_ID = int(os.environ["DPGEN_ITER_ID"])
+
+# def curr_iter():
+#     return max([
+#         int(dirname.name.split(".")[1])
+#         for dirname in Path("dp_run").glob("iter.*")
+#         if Path(dirname).is_dir()
+#     ] + [0])
+
+def list_dp_systems(dirname):
+    from pathlib import Path
+    dirname = Path(dirname)
+    print(dirname)
+    for d in dirname.glob("**/set.000"):
+        yield d.parent.relative_to(dirname)
 
 rule dp_run_train_target:
     params:
     input:
-        expand("dp_run/iter.{i:06d}/00.train/{igraph:03d}/params.yml",
-            i=curr_iter(), igraph=range(config["dp_run"]["train"]["numb_models"]))
+        params=expand("dp_run/iter.{i:06d}/00.train/{igraph:03d}/params.yml",
+            i=ITER_ID,
+            igraph=range(config["dp_run"]["train"]["numb_models"])
+        )
 
 rule dp_run_train_task:
     input:
@@ -35,7 +48,7 @@ rule dp_run_train_task:
         job_sh="dp_run/iter.{i}/00.train/{igraph}/job.sh",
     params:
         s_param=lambda w: [
-            "-s ../data/init",
+            *expand("-s ../data/init/{dirname}", dirname=list_dp_systems("dp_run/iter.{i}/00.train/data/init".format(i=w.i))),
             *expand("-s ../data/iter.{j:06d}", j=range(int(w["i"])))
         ]
     shell:
@@ -47,50 +60,25 @@ rule dp_run_train_task:
 rule dp_run_graph_target:
     input:
         expand("dp_run/iter.{i:06d}/00.train/graph.{igraph:03d}.pb",
-            i=curr_iter(), igraph=range(config["dp_run"]["train"]["numb_models"]))
+            i=ITER_ID, igraph=range(config["dp_run"]["train"]["numb_models"])),
+        expand("dp_run/iter.{i:06d}/00.train/graph.compressed.{igraph:03d}.pb",
+            i=ITER_ID, igraph=range(config["dp_run"]["train"]["numb_models"])),
 
 rule dp_run_graph_copy:
+    wildcard_constraints:
+        i=r"\d+",
+        igraph=r"\d+",
     input:
-        graph="dp_run/iter.{i}/00.train/{igraph}/graph.pb",
+        graph=              "dp_run/iter.{i}/00.train/{igraph}/graph.pb",
+        graph_compressed=   "dp_run/iter.{i}/00.train/{igraph}/graph.compressed.pb",
     output:
-        graph="dp_run/iter.{i}/00.train/graph.{igraph}.pb",
+        graph=              "dp_run/iter.{i}/00.train/graph.{igraph}.pb",
+        graph_compressed=   "dp_run/iter.{i}/00.train/graph.compressed.{igraph}.pb",
     shell:
         '''
         cp {input.graph} {output.graph}
+        cp {input.graph_compressed} {output.graph_compressed}
         '''
-
-# rule dp_run_freeze_target:
-#     input:
-#         expand("dp_run/iter.{i:06d}/00.train/graph.{igraph:03d}.pb",
-#             i=curr_iter(), igraph=range(config["dp_run"]["train"]["numb_models"]))
-
-# rule dp_run_freeze:
-#     input:
-#         workdir="dp_run/iter.{i}/00.train/{igraph}",
-#         tf_checkpoint="dp_run/iter.{i}/00.train/{igraph}/checkpoint",
-#     output:
-#         graph_pb="dp_run/iter.{i}/00.train/graph.{igraph}.pb",
-#     params:
-#         env_deepmd=config["env"]["deepmd"],
-#         igraph=lambda w: w["igraph"]
-#     shell:
-#         '''
-#         set +eu
-#         source {params.env_deepmd}
-#         cd {input.workdir}
-#         # dp freeze -o ../graph.{params.igraph}.pb
-#         cp graph.tmp.pb ../graph.{params.igraph}.pb
-#         '''
-
-# rule dp_run_model_devi_graph:
-#     input:
-#         graph="dp_run/iter.{i}/00.train/graph.{igraph}.pb",
-#     output:
-#         graph="dp_run/iter.{i}/01.model_devi/graph.{igraph}.pb",
-#     shell:
-#         '''
-#         cp {input.graph} $(dirname {output.graph})
-#         '''
 
 
 @lru_cache()
@@ -99,14 +87,14 @@ def devi_tasks(idx_iter):
     with open(f"tasks/iter.{idx_iter:06d}.out.json") as fp:
         return json.load(fp)
 
+
 rule dp_run_model_devi_target:
     input:
         tasks=lambda w: [
             "dp_run/iter.{i:06d}/01.model_devi/{path}".format(
-                i=curr_iter(), path=path, 
-            ) for path in devi_tasks(curr_iter()).keys()
+                i=ITER_ID, path=path, 
+            ) for path in devi_tasks(ITER_ID).keys()
         ]
-    
 
 rule dp_run_model_devi_task:
     wildcard_constraints:
@@ -115,7 +103,7 @@ rule dp_run_model_devi_task:
         lammps_input=   expand("{templates}/input.lmp", templates=config["dp_run"]["model_devi"]["templates"]),
         job_sh=         expand("{templates}/job.sh",    templates=config["dp_run"]["model_devi"]["templates"]),
         vasp_structure= lambda w: devi_tasks(int(w.i))[w.task]["conf"]["init"],
-        graph=          expand("dp_run/iter.{{i}}/00.train/graph.{igraph:03d}.pb", igraph=range(config["dp_run"]["train"]["numb_models"]))
+        graph=          expand("dp_run/iter.{{i}}/00.train/graph.compressed.{igraph:03d}.pb", igraph=range(config["dp_run"]["train"]["numb_models"]))
     output:
         workdir=  directory("dp_run/iter.{i}/01.model_devi/{task}"),
         traj=     directory("dp_run/iter.{i}/01.model_devi/{task}/traj"),
@@ -124,7 +112,8 @@ rule dp_run_model_devi_task:
         vasp_structure=     "dp_run/iter.{i}/01.model_devi/{task}/conf.POSCAR",
         lammps_structure=   "dp_run/iter.{i}/01.model_devi/{task}/conf.lmp",
         job_sh=             "dp_run/iter.{i}/01.model_devi/{task}/job.sh",
-        graph=       expand("dp_run/iter.{{i}}/01.model_devi/{{task}}/graph.{igraph:03d}.pb", igraph=range(config["dp_run"]["train"]["numb_models"]))
+        graph=       expand("dp_run/iter.{{i}}/01.model_devi/{{task}}/graph.compressed.{igraph:03d}.pb",
+                            igraph=range(config["dp_run"]["train"]["numb_models"]))
     params:
         env_deepmd=config["env"]["deepmd"],
         task=lambda w: devi_tasks(int(w.i))[w.task],
@@ -142,11 +131,10 @@ rule dp_run_model_devi_task:
 
         shell('''
         set +eu
-        source {params.env_deepmd}
+        # source {params.env_deepmd}
+
         python3 scripts/make-lammps-input.py {input.lammps_input} {output.lammps_input_params} 1> {output.lammps_input}
-
         cat {input.vasp_structure} | python3 scripts/make-scaled-lattice.py -{transform} 1> {output.vasp_structure}
-
         python3 scripts/make-lammps-structure.py {output.vasp_structure} {output.lammps_structure} --ofmt=lammps/lmp
 
         for g in {input.graph}
@@ -157,19 +145,19 @@ rule dp_run_model_devi_task:
         cp {input.job_sh} {output.job_sh}
         ''')
 
+
 checkpoint dp_run_filter_devi:
     input:
         model_devi=[
-            "dp_run/iter.{i:06d}/01.model_devi/{path}/model_devi.out".format(
-                i=curr_iter(), path=path, 
-            ) for path in devi_tasks(curr_iter()).keys()
+            f"dp_run/iter.{ITER_ID:06d}/01.model_devi/{path}/model_devi.out"
+            for path in devi_tasks(ITER_ID).keys()
         ]
     output:
-        accurate="dp_run/iter.{i}/01.model_devi.accurate.dat",
-        candidate="dp_run/iter.{i}/01.model_devi.candidate.dat",
-        failed="dp_run/iter.{i}/01.model_devi.failed.dat",
+        accurate=f"dp_run/iter.{ITER_ID:06d}/01.model_devi.accurate.dat",
+        candidate=f"dp_run/iter.{ITER_ID:06d}/01.model_devi.candidate.dat",
+        failed=f"dp_run/iter.{ITER_ID:06d}/01.model_devi.failed.dat",
 
-        candidate_shuffled="dp_run/iter.{i}/01.model_devi.candidate.shuffled.dat",
+        candidate_shuffled=f"dp_run/iter.{ITER_ID:06d}/01.model_devi.candidate.shuffled.dat",
 
     params:
         f_limit_lo=min(config["dp_run"]["model_devi"]["limits"]["f"]),
@@ -185,24 +173,27 @@ checkpoint dp_run_filter_devi:
 
 
 def get_fp_candidates(iiter):
-    with checkpoints.dp_run_filter_devi.get(i="%06d" % iiter).output.candidate_shuffled.open() as fp:
+    with checkpoints\
+            .dp_run_filter_devi\
+            .get(i="%06d" % iiter).output\
+            .candidate_shuffled.open() as fp:
         return [line.strip() for line in fp.readlines()]
 
 rule dp_run_fp_target:
     input:
         lambda w: expand("dp_run/iter.{i:06d}/02.fp/{iconf:06d}",
             iconf=range(min(
-                len(get_fp_candidates(curr_iter())),
+                len(get_fp_candidates(ITER_ID)),
                 config["dp_run"]["fp"]["max_conf"]
             )),
-            i=curr_iter()
+            i=ITER_ID
         )
     
 rule dp_run_fp:
     wildcard_constraints:
         iconf="\d+"
     input:
-        lammps_structure=lambda w: get_fp_candidates(curr_iter())[int(w.iconf)],
+        lammps_structure=lambda w: get_fp_candidates(ITER_ID)[int(w.iconf)],
         KPOINTS=expand("{templates}/KPOINTS", templates=config["dp_run"]["fp"]["templates"]),
         INCAR=expand("{templates}/INCAR", templates=config["dp_run"]["fp"]["templates"]),
         # POTCAR=expand("{templates}/KPOINTS", templates=config["dp_run"]["fp"]["templates"]),
@@ -239,22 +230,22 @@ rule dp_run_fp_collect:
     input: 
         vasprun=lambda w: expand("dp_run/iter.{i:06d}/02.fp/{iconf:06d}/vasprun.xml",
             iconf=range(min(
-                len(get_fp_candidates(curr_iter())),
+                len(get_fp_candidates(ITER_ID)),
                 config["dp_run"]["fp"]["max_conf"]
             )),
-            i=curr_iter()
+            i=ITER_ID
         ),
-        old="dp_run/iter.{i:06d}/00.train/".format(i=curr_iter())
+        old="dp_run/iter.{i:06d}/00.train/".format(i=ITER_ID)
     params:
         env_deepmd=config["env"]["deepmd"],
         elements=",".join(config["system"]["elements"]),
     output:
-        workdir=directory("dp_run/iter.{i:06d}/00.train/".format(i=curr_iter() + 1)),
-        init=   directory("dp_run/iter.{i:06d}/00.train/data/init".format(i=curr_iter() + 1)),
-        curr=   directory("dp_run/iter.{i:06d}/00.train/data/iter.{j:06d}".format(i=curr_iter() + 1, j=curr_iter())),
+        workdir=directory("dp_run/iter.{i:06d}/00.train/".format(i=ITER_ID + 1)),
+        init=   directory("dp_run/iter.{i:06d}/00.train/data/init".format(i=ITER_ID + 1)),
+        curr=   directory("dp_run/iter.{i:06d}/00.train/data/iter.{j:06d}".format(i=ITER_ID + 1, j=ITER_ID)),
         iters=[
-            directory("dp_run/iter.{i:06d}/00.train/data/iter.{j:06d}".format(i=curr_iter() + 1, j=j))
-            for j in range(curr_iter() + 1)
+            directory("dp_run/iter.{i:06d}/00.train/data/iter.{j:06d}".format(i=ITER_ID + 1, j=j))
+            for j in range(ITER_ID + 1)
         ]
 
     shell:
@@ -264,7 +255,7 @@ rule dp_run_fp_collect:
 
         mkdir -p {output.workdir}
 
-        cp -rv {input.old}/* {output.workdir}
+        cp -r {input.old}/* {output.workdir}
         rm {output.workdir}/*/lcurve.out
         rm {output.workdir}/*/params.yml
         rm {output.workdir}/*/*.out
