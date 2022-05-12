@@ -2,8 +2,8 @@ import click
 import dpdata
 import sys
 
-IFMT_CHOICES=["auto", *dpdata.System.register_from_funcs.funcs.keys()]
-OFMT_CHOICES=dpdata.System.register_to_funcs.funcs.keys()
+IFMT_CHOICES=["auto", *dpdata.format.Format().get_formats()]
+OFMT_CHOICES=dpdata.format.Format().get_formats()
 
 @click.command()
 @click.argument("fin")
