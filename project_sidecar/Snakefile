@@ -1,0 +1,83 @@
+
+from snakemake.remote.SFTP import RemoteProvider as SFTPRemoteProvider
+
+remote = lambda fname: SFTPRemoteProvider(
+    username="xxx",
+).remote("sftp://{host}/{project}/{file}".format(
+    host="login02.anvil.rcac.purdue.edu",
+    file=fname,
+    project="/home/xxx/PROJECT/xxxx",
+))
+
+envvars:
+    "DPGEN_ITER_ID"
+
+ITER_ID = int(os.environ["DPGEN_ITER_ID"])
+ICONFS = glob_wildcards(f"dp_run/iter.{ITER_ID:06d}/02.fp/{{iconf}}/POSCAR").iconf
+
+rule dp_run_fp_input:
+    input:
+        remote(f"dp_run/iter.{ITER_ID:06d}/02.fp.input.tar.gz"),
+    output:
+        output=directory(f"dp_run/iter.{ITER_ID:06d}/02.fp"),
+        workdir=directory(f"dp_run/iter.{ITER_ID:06d}"),
+    shell:
+        '''
+        mkdir -p {output.workdir}
+        ln -s $(realpath {input}) {output.workdir}
+        cd {output.workdir}
+        tar -xvf $(basename {input})
+        '''
+
+
+rule dp_run_fp_target:
+    input:
+        job_sh= expand(f"dp_run/iter.{ITER_ID:06d}/02.fp/{{iconf}}/job.sh",     iconf=ICONFS),
+        INCAR=  expand(f"dp_run/iter.{ITER_ID:06d}/02.fp/{{iconf}}/INCAR",      iconf=ICONFS),
+        KPOINTS=expand(f"dp_run/iter.{ITER_ID:06d}/02.fp/{{iconf}}/KPOINTS",    iconf=ICONFS),
+        POTCAR= expand(f"dp_run/iter.{ITER_ID:06d}/02.fp/{{iconf}}/POTCAR",     iconf=ICONFS),
+        POSCAR= expand(f"dp_run/iter.{ITER_ID:06d}/02.fp/{{iconf}}/POSCAR",     iconf=ICONFS),
+ 
+
+rule dp_run_fp_job:
+    input:
+        POSCAR= f"dp_run/iter.{ITER_ID:06d}/02.fp/{{iconf}}/POSCAR",
+        INCAR=  "templates/INCAR",
+        KPOINTS="templates/KPOINTS",
+        POTCAR= "templates/POTCAR",
+        job_sh= "templates/job.sh",
+    output:
+        job_sh= f"dp_run/iter.{ITER_ID:06d}/02.fp/{{iconf}}/job.sh",
+        INCAR=  f"dp_run/iter.{ITER_ID:06d}/02.fp/{{iconf}}/INCAR",
+        KPOINTS=f"dp_run/iter.{ITER_ID:06d}/02.fp/{{iconf}}/KPOINTS",
+        POTCAR= f"dp_run/iter.{ITER_ID:06d}/02.fp/{{iconf}}/POTCAR",
+    shell:
+        '''
+        cp -f {input.KPOINTS} {output.KPOINTS}
+        cp -f {input.INCAR} {output.INCAR}
+        cp -f {input.POTCAR} {output.POTCAR}
+        cp -f {input.job_sh} {output.job_sh}
+        '''
+
+ICONFS2 = glob_wildcards(f"dp_run/iter.{ITER_ID:06d}/02.fp/{{iconf}}/vasprun.xml").iconf
+
+rule dp_run_fp_done_target:
+    input:
+        workdir=f"dp_run/iter.{ITER_ID:06d}/02.fp",
+        vasprun=expand(f"dp_run/iter.{ITER_ID:06d}/02.fp/{{iconf}}/vasprun.xml",    iconf=ICONFS2),
+        OUTCAR= expand(f"dp_run/iter.{ITER_ID:06d}/02.fp/{{iconf}}/OUTCAR",         iconf=ICONFS2),
+    output:
+        local=f"dp_run/iter.{ITER_ID:06d}/02.fp.output.tar",
+        done=f"dp_run/iter.{ITER_ID:06d}/02.fp.done",
+        remote=remote(f"dp_run/iter.{ITER_ID:06d}/02.fp.output.tar"),
+    shell:
+        '''
+        touch {output.done}
+
+        CWD=$(pwd -P)
+        cd $(dirname {output.local})
+        tar -cvf 02.fp.output.tar 02.fp $(basename {output.done})
+
+        cd $CWD
+        cp {output.local} {output.remote}
+        '''
