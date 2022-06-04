@@ -1,0 +1,20 @@
+SYSTEM = xxx
+
+NCORE = 2 up to number-of-cores-per-node
+
+PREC = Accurate
+ENCUT = 520.0
+METAGGA  = SCAN
+EDIFF = 1.0e-08
+ALGO = Fast
+LREAL = Auto
+
+ISYM = 0
+
+IBRION = -1
+ISIF = 2
+MDALGO = 2
+NSW = 0
+
+ISMEAR = 0
+SIGMA = 0.01
