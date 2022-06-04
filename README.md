@@ -11,11 +11,12 @@ A lightweight [Snakemake][1]-based workflow that implements the [DP-GEN][2] sche
 
 ## Project structure
 
-- **`project`**: Actrual project files.
-  - **`workflows`**: Snakemake workflow files.
-  - **`scripts`**: Scripts for transforming input / output.
-  - **`templates`**: Templates for genrating files.
-- **`envs`**: conda environments for workflow orchestration and DeePMD-kit training / evaluation.
+- [**`project`**](project): Actrual project files.
+  - [**`workflows`**](project/workflows): Snakemake workflow files.
+  - [**`scripts`**](project/scripts): Scripts for transforming input / output.
+  - [**`scripts`**](project/scripts): Templates for genrating files.
+  - [**`tests`**](project/tests): Tests for the Python scripts.
+- [**`envs`**](envs): conda environments for workflow orchestration and DeePMD-kit training / evaluation.
 
 ## Usage
 
