@@ -41,10 +41,6 @@ eos:
 dp_init:
   templates: "templates/dp_init"
   supercell: [2, 2, 4]
-  perturb:
-    number: 10
-    box: 0.03
-    atom: 0.01
 dp_run:
   iterations: []
   train:
