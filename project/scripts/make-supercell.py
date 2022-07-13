@@ -1,8 +1,10 @@
 import sys
 from collections import defaultdict
+from typing import List, Optional
 
 import numpy
 import click
+import ase
 import ase.io
 import ase.build
 from ase.symbols import symbols2numbers
@@ -14,7 +16,7 @@ ofmt_kwargs["vasp"] = {
 }
 
 
-def sort_ase_atoms(atoms, tags=None):
+def sort_ase_atoms(atoms: ase.Atoms, tags: List[str] = None) -> ase.Atoms:
 
     tags = tags if tags else []
     ntag = len(tags)
