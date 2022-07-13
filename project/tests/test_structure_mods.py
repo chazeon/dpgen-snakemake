@@ -1,3 +1,4 @@
+from turtle import back
 import numpy
 import pytest
 import importlib  
@@ -51,8 +52,7 @@ def test_make_supercell_can_run(
 
 
 @pytest.mark.parametrize("input_file", inputs)
-def test_sort_ase_atoms(
-    input_file: str):
+def test_sort_ase_atoms(input_file: str):
 
     import ase, ase.io 
 
@@ -77,4 +77,28 @@ def test_sort_ase_atoms(
         if len(symbols) > 1:
             # Assume is not all zero 
             assert numpy.any(numpy.diff(tmp) > 0)
+
+
+@pytest.mark.parametrize("input_file", inputs)
+def test_remap_ase_atomic_numbers(input_file: str):
+
+    import ase, ase.io 
+
+    remap_ase_atomic_numbers = importlib.import_module("make-supercell").remap_ase_atomic_numbers
+    atoms = ase.io.read(input_file, format="vasp")
+
+    symbols = numpy.unique(atoms.get_chemical_symbols()).tolist()
+    numpy.random.shuffle(symbols)
+
+    n0 = atoms.numbers
+    n1 = remap_ase_atomic_numbers(n0, tags=symbols)
+    n2 = remap_ase_atomic_numbers(n1, tags=symbols, back=True)
+    n3 = remap_ase_atomic_numbers(n2, tags=symbols)
+
+    numpy.testing.assert_array_equal(n0, n2)
+    numpy.testing.assert_array_equal(n1, n3)
+
+    assert numpy.all(n1 >= 1)
+    assert numpy.all(n1 <= len(symbols))
+    assert len(numpy.unique(n1).tolist()) == len(symbols)
 
